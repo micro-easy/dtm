@@ -14,4 +14,6 @@ const (
 
 	ProtocolHttp = "http"
 	ProtocolGrpc = "grpc"
+
+	ExpireScanLocker = "expire_scan_locker"
 )

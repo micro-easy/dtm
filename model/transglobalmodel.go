@@ -84,6 +84,20 @@ func (m *TransGlobalModel) FindOneByGid(gid string) (*TransGlobal, error) {
 	}
 }
 
+func (m *TransGlobalModel) FindExpiredTrans(expireTime, limit int64) ([]*TransGlobal, error) {
+	var resp []*TransGlobal
+	query := fmt.Sprintf("select %s from %s where status in (prepared,submitted,exec,rollback) and update_time < ? limit ? ", transGlobalRows, m.table)
+	err := m.conn.QueryRows(&resp, query, time.Now().Add(-time.Duration(expireTime)*time.Second), limit)
+	switch err {
+	case nil:
+		return resp, nil
+	case sqlc.ErrNotFound:
+		return nil, ErrNotFound
+	default:
+		return nil, err
+	}
+}
+
 func (m *TransGlobalModel) InsertWithSession(s sqlx.Session, data *TransGlobal) (sql.Result, error) {
 	query := fmt.Sprintf("insert into %s (%s) values ( ?, ?, ?, ?, ?, ?)", m.table, transGlobalRowsExpectAutoSet)
 	ret, err := s.Exec(query, data.Gid, data.Status, data.CheckPrepared, data.CheckTriedNum, data.Source, data.ExpireDuration)
@@ -93,4 +107,9 @@ func (m *TransGlobalModel) InsertWithSession(s sqlx.Session, data *TransGlobal) 
 func (m *TransGlobalModel) UpdateStatusWithSession(s sqlx.Session, data *TransGlobal, ver int64) (sql.Result, error) {
 	query := fmt.Sprintf("update %s set status = ? ,check_tried_num = ?, version = ? where id = ? and version = ? ", m.table)
 	return s.Exec(query, data.Status, data.CheckTriedNum, ver, data.Id, data.Version)
+}
+
+func (m *TransGlobalModel) Touch(data *TransGlobal) (sql.Result, error) {
+	query := fmt.Sprintf("update %s set update_time = ? where id = ? ", m.table)
+	return m.conn.Exec(query, time.Now(), data.Id)
 }

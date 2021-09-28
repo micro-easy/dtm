@@ -58,7 +58,33 @@ func InitTasks(svc *svc.ServiceContext) {
 		for {
 			<-c
 			threading.GoSafe(func() {
-				// TODO
+				// here get a lock
+				scanLocker := redis.NewRedisLock(svc.Redis, ExpireScanLocker)
+				locked, _ := scanLocker.Acquire()
+				if !locked {
+					return
+				}
+				defer scanLocker.Release()
+				exGlobalTranses, err := svc.TransGlobalModel.FindExpiredTrans(svc.Conf.ExpireTime, svc.Conf.ExpireLimit)
+				if err != nil {
+					logx.Errorf("FindExpiredTrans err %v", err)
+					return
+				}
+				if len(exGlobalTranses) == 0 {
+					return
+				}
+				for _, exGlobalTrans := range exGlobalTranses {
+					// touch the global trans
+					svc.TransGlobalModel.Touch(exGlobalTrans)
+					// go handle the global trans
+					threading.GoSafe(func() {
+						locker := redis.NewRedisLock(svc.Redis, exGlobalTrans.Gid)
+						if err := handleSteps(svc, exGlobalTrans.Gid, locker); err != nil {
+							logx.Errorf("handleSteps err %v for gid %s", err, exGlobalTrans.Gid)
+						}
+					})
+				}
+
 			})
 		}
 	})

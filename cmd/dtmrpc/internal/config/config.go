@@ -14,5 +14,7 @@ type Config struct {
 		TransBranch string
 	}
 	TransCronInterval int64 `json:",default=10"`
+	ExpireTime        int64 `json:",default=60"`
+	ExpireLimit       int64 `json:",default=50"`
 	Redis             redis.RedisConf
 }
