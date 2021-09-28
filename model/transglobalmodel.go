@@ -13,10 +13,10 @@ import (
 )
 
 var (
-	transGlobalFieldNames          = builderx.FieldNames(&TransGlobal{})
-	transGlobalRows                = strings.Join(transGlobalFieldNames, ",")
-	transGlobalRowsExpectAutoSet   = strings.Join(stringx.Remove(transGlobalFieldNames, "`id`", "`create_time`", "`update_time`", "`version`"), ",")
-	transGlobalRowsWithPlaceHolder = strings.Join(stringx.Remove(transGlobalFieldNames, "`id`", "`create_time`", "`update_time`", "`version`"), "=?,") + "=?"
+	transGlobalFieldNames        = builderx.FieldNames(&TransGlobal{})
+	transGlobalRows              = strings.Join(transGlobalFieldNames, ",")
+	transGlobalRowsExpectAutoSet = strings.Join(stringx.Remove(transGlobalFieldNames, "id", "create_time", "update_time", "version"), ",")
+	transUnfinishedStatus        = strings.Join([]string{"\"prepared\"", "\"submitted\"", "\"exec\"", "\"rollback\""}, ",")
 )
 
 type (
@@ -86,7 +86,7 @@ func (m *TransGlobalModel) FindOneByGid(gid string) (*TransGlobal, error) {
 
 func (m *TransGlobalModel) FindExpiredTrans(expireTime, limit int64) ([]*TransGlobal, error) {
 	var resp []*TransGlobal
-	query := fmt.Sprintf("select %s from %s where status in (prepared,submitted,exec,rollback) and update_time < ? limit ? ", transGlobalRows, m.table)
+	query := fmt.Sprintf("select %s from %s where status in (%s) and update_time < ? limit ? ", transGlobalRows, m.table, transUnfinishedStatus)
 	err := m.conn.QueryRows(&resp, query, time.Now().Add(-time.Duration(expireTime)*time.Second), limit)
 	switch err {
 	case nil:

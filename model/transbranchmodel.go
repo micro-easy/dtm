@@ -15,8 +15,8 @@ import (
 var (
 	transBranchFieldNames          = builderx.FieldNames(&TransBranch{})
 	transBranchRows                = strings.Join(transBranchFieldNames, ",")
-	transBranchRowsExpectAutoSet   = strings.Join(stringx.Remove(transBranchFieldNames, "`id`", "`create_time`", "`update_time`", "`version`"), ",")
-	transBranchRowsWithPlaceHolder = strings.Join(stringx.Remove(transBranchFieldNames, "`id`", "`create_time`", "`update_time`", "`version`"), "=?,") + "=?"
+	transBranchRowsExpectAutoSet   = strings.Join(stringx.Remove(transBranchFieldNames, "id", "create_time", "update_time", "version"), ",")
+	transBranchRowsWithPlaceHolder = strings.Join(stringx.Remove(transBranchFieldNames, "id", "create_time", "update_time", "version"), "=?,") + "=?"
 )
 
 type (
