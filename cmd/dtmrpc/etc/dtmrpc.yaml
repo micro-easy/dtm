@@ -1,0 +1,20 @@
+Name: dtmrpc
+ListenOn: 0.0.0.0:9201
+Timeout: 5000
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9203
+
+# 运行环境 dev|qa|stag|pre|pro
+Env: dev
+
+DataSource: root:123456ms@tcp(127.0.0.1:3306)/dtm?charset=utf8mb4&parseTime=true&loc=Local
+Tables:
+  TransGlobal: trans_global # 全局事务表
+  TransBranch: trans_branch # 分支事务表
+
+Redis:
+  Host: 127.0.0.1:6379
+  Type: node
+  Pass: 

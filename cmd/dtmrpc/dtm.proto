@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package dtm;
+
+option php_namespace = "Pb\\Dtm";
+
+message GenGidReq {
+}
+
+message GenGidResp {
+	string gid = 1;
+}
+
+message Action {
+	string url = 1;
+	string data = 2;
+	string proto = 3;
+	int64 retry_num = 4;
+}
+
+message Step {
+	string name = 1;
+	Action action = 2;
+	Action compensate = 3;
+	int64 layer_num = 4;
+}
+
+message PrepareReq {
+	repeated Step steps= 1;
+	int64 first_exec = 2;
+	int64 expire_duration = 3;
+	Action check = 4;
+}
+
+message PrepareResp {
+	string gid = 1;
+}
+
+message SubmitReq {
+	string gid = 1;
+	repeated Step steps = 2;
+	int64 first_exec = 3;
+	int64 expire_duration = 4;
+}
+
+message SubmitResp {
+	string gid = 1;
+}
+
+message CheckReq {
+	string gid = 1;
+}
+
+message CheckResp {
+	string data = 1;
+}
+
+
+service dtm {
+	rpc GenGid (GenGidReq) returns (GenGidResp); 
+	rpc Prepare (PrepareReq) returns (PrepareResp);
+	rpc Submit (SubmitReq) returns (SubmitResp);
+	rpc Check (CheckReq) returns (CheckResp);
+}
